@@ -1,0 +1,6 @@
+.vscode/settings.json
+__pycache__/
+websocket.log
+build/
+dist/
+*.spec
