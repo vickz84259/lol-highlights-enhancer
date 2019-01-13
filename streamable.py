@@ -1,6 +1,6 @@
-import os.path
-
 import requests
+
+import utils
 
 
 def upload(file_path, username, password):
@@ -15,7 +15,7 @@ def upload(file_path, username, password):
         A string that represents the url to the uploaded video
     """
     with open(file_path, 'rb') as file:
-        filename = os.path.splitext(os.path.basename(file_path))[0]
+        filename = utils.get_filename(file_path)
         content = {'file': (filename, file)}
 
         user_agent = {
