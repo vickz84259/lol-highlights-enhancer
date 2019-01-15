@@ -16,7 +16,8 @@ class ProcessCheckerThread(QtCore.QThread):
     def __init__(self):
         super().__init__()
 
-    def __del__(self):
+    def exit(self):
+        self.running = False
         self.wait()
 
     def run(self):
@@ -30,7 +31,7 @@ class ProcessCheckerThread(QtCore.QThread):
             else:
                 self.status.emit('running')
             finally:
-                time.sleep(2 * 60)  # 2 minutes
+                time.sleep(10)
 
 
 def get_process():

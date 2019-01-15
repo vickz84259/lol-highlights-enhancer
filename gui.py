@@ -18,6 +18,21 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         self.setToolTip('Lol-highlights-enhancer')
         self.activated.connect(self.icon_activated)
 
+        self.checker_thread = league.ProcessCheckerThread()
+        self.checker_thread.start()
+        self.checker_thread.status.connect(self.process_status)
+
+        self.setup_context_menu()
+
+    def setup_context_menu(self):
+        context_menu = QtWidgets.QMenu()
+
+        quit_action = context_menu.addAction('Quit')
+        quit_action.triggered.connect(self.checker_thread.exit)
+        quit_action.triggered.connect(QtWidgets.qApp.quit)
+
+        self.setContextMenu(context_menu)
+
     def icon_activated(self, reason):
         print(reason)
 
@@ -39,9 +54,5 @@ if __name__ == "__main__":
     icon = QtGui.QIcon('resources\\logo.ico')
     system_tray = SystemTrayIcon(icon)
     system_tray.show()
-
-    checker_thread = league.ProcessCheckerThread()
-    checker_thread.start()
-    checker_thread.status.connect(system_tray.process_status)
 
     sys.exit(app.exec_())
