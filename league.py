@@ -1,10 +1,36 @@
 import re
 import subprocess
+import time
+
+import PySide2.QtCore as QtCore
 
 
 class LeagueNotRunningException(Exception):
     """Exception Raised if the League Client is not running
     """
+
+
+class ProcessCheckerThread(QtCore.QThread):
+    status = QtCore.Signal(str)
+
+    def __init__(self):
+        super().__init__()
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        self.running = True
+
+        while self.running:
+            try:
+                get_process()
+            except LeagueNotRunningException:
+                self.status.emit('not_running')
+            else:
+                self.status.emit('running')
+            finally:
+                time.sleep(2 * 60)  # 2 minutes
 
 
 def get_process():
