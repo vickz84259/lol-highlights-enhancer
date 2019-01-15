@@ -1,7 +1,6 @@
 import base64
 import json
 import ssl
-import time
 
 import websocket
 import PySide2.QtCore as QtCore

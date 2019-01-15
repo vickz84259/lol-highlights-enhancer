@@ -42,13 +42,14 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         self.checker_thread.exit()
         self.websocket_thread.exit()
 
+    def show_notification(self, message):
+        self.showMessage('Lol-Highlights-Enhancer', message, self.NoIcon)
+
     def process_status(self, status):
         if status == 'not_running':
             if not self.notification_shown:
-                self.showMessage(
-                    'League Client Status',
-                    'The League of Legends Client is not running.',
-                    self.NoIcon)
+                self.show_notification(
+                    'The League of Legends Client is not running.')
                 self.notification_shown = True
         elif status == 'running' and not self.ws_is_running:
             self.websocket_thread = ws.WebSocketThread()
