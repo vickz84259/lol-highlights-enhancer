@@ -44,6 +44,7 @@ class WebSocketThread(QtCore.QThread):
 
     def exit(self):
         self.ws.close()
+        self.wait()
 
     def run(self):
         token, port = league.get_connection_details()

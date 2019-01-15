@@ -4,6 +4,7 @@ import PySide2.QtWidgets as QtWidgets
 import PySide2.QtGui as QtGui
 
 import league
+import ws
 
 
 class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
@@ -12,6 +13,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         super().__init__(icon)
 
         self.notification_shown = False
+        self.ws_is_running = False
         self.init()
 
     def init(self):
@@ -28,13 +30,17 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         context_menu = QtWidgets.QMenu()
 
         quit_action = context_menu.addAction('Quit')
-        quit_action.triggered.connect(self.checker_thread.exit)
+        quit_action.triggered.connect(self.handle_exit)
         quit_action.triggered.connect(QtWidgets.qApp.quit)
 
         self.setContextMenu(context_menu)
 
     def icon_activated(self, reason):
         print(reason)
+
+    def handle_exit(self):
+        self.checker_thread.exit()
+        self.websocket_thread.exit()
 
     def process_status(self, status):
         if status == 'not_running':
@@ -44,8 +50,11 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
                     'The League of Legends Client is not running.',
                     self.NoIcon)
                 self.notification_shown = True
-        elif status == 'running':
-            pass
+        elif status == 'running' and not self.ws_is_running:
+            self.websocket_thread = ws.WebSocketThread()
+            self.websocket_thread.start()
+
+            self.ws_is_running = True
 
 
 if __name__ == "__main__":
