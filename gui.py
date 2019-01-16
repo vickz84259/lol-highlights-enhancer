@@ -3,6 +3,7 @@ import sys
 import PySide2.QtWidgets as QtWidgets
 import PySide2.QtGui as QtGui
 
+from data_manager import DataStore
 import league
 import ws
 
@@ -56,6 +57,10 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
             self.websocket_thread.start()
 
             self.ws_is_running = True
+
+            preferences = DataStore.get_preferences()
+            if preferences['first_time']:
+                DataStore.setup_preferences()
 
 
 if __name__ == "__main__":
