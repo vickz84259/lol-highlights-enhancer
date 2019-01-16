@@ -1,10 +1,37 @@
 import re
 import subprocess
+import time
+
+import PySide2.QtCore as QtCore
 
 
 class LeagueNotRunningException(Exception):
     """Exception Raised if the League Client is not running
     """
+
+
+class ProcessCheckerThread(QtCore.QThread):
+    status = QtCore.Signal(str)
+
+    def __init__(self):
+        super().__init__()
+
+    def exit(self):
+        self.running = False
+        self.wait()
+
+    def run(self):
+        self.running = True
+
+        while self.running:
+            try:
+                get_process()
+            except LeagueNotRunningException:
+                self.status.emit('not_running')
+            else:
+                self.status.emit('running')
+            finally:
+                time.sleep(10)
 
 
 def get_process():
@@ -16,6 +43,9 @@ def get_process():
 
     Returns:
         A string (the string is empty if the client isn't running)
+
+    Raises:
+        LeagueNotRunningException
     """
 
     # Using the WMIC command to retrieve running processes.
@@ -31,6 +61,9 @@ def get_process():
             result = re.sub(' +', ' ', line).rstrip()
             break
 
+    if not result:
+        raise LeagueNotRunningException
+
     return result
 
 
@@ -45,9 +78,6 @@ def get_connection_details():
     """
 
     command_line = get_process()
-
-    if command_line == '':
-        raise LeagueNotRunningException
 
     token = re.search(r'\"--remoting-auth-token=(\S+)\"',
                       command_line).group(1)
