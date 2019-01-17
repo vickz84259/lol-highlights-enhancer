@@ -4,6 +4,7 @@ import PySide2.QtWidgets as QtWidgets
 import PySide2.QtGui as QtGui
 
 from data_manager import DataStore
+from watch_highlights import HighlightsWatchThread
 import league
 import ws
 
@@ -43,6 +44,18 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         self.checker_thread.exit()
         self.websocket_thread.exit()
 
+    def handle_api_events(self, message):
+        uri = message[2]['uri']
+        data = message[2]['data']
+
+        if uri == '/lol-gameflow/v1/watch':
+            if data == 'WatchInProgress':
+                higlights_path = self.preferences['current-highlights-folder']
+                self.highlights_thread = HighlightsWatchThread(higlights_path)
+                self.highlights_thread.start()
+            else:
+                self.highlights_thread.exit()
+
     def show_notification(self, message):
         self.showMessage('Lol-Highlights-Enhancer', message, self.NoIcon)
 
@@ -55,11 +68,12 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         elif status == 'running' and not self.ws_is_running:
             self.websocket_thread = ws.WebSocketThread()
             self.websocket_thread.start()
+            self.websocket_thread.api_event.connect(self.handle_api_events)
 
             self.ws_is_running = True
 
-            preferences = DataStore.get_preferences()
-            if preferences['first_time']:
+            self.preferences = DataStore.get_preferences()
+            if self.preferences['first_time']:
                 DataStore.setup_preferences()
 
 
