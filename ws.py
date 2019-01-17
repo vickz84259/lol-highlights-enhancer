@@ -11,6 +11,7 @@ file = None
 
 
 class WebSocketThread(QtCore.QThread):
+    api_event = QtCore.Signal(list)
 
     def __init__(self):
         super().__init__()
@@ -21,7 +22,8 @@ class WebSocketThread(QtCore.QThread):
 
     def on_message(self, message):
         if message:
-            print(json.loads(message))
+            msg = json.loads(message)
+            self.api_event.emit(msg)
 
     def on_error(self, error):
         pass
