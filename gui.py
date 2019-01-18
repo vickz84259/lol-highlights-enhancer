@@ -59,9 +59,6 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
             else:
                 self.highlights_thread.exit()
 
-    def highlight_created(self, path):
-        pass
-
     def show_notification(self, message):
         self.showMessage('Lol-Highlights-Enhancer', message, self.NoIcon)
 
@@ -80,7 +77,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
             self.preferences = DataStore.get_preferences()
             if self.preferences['first_time']:
-                DataStore.setup_preferences()
+                DataStore.setup()
 
 
 if __name__ == "__main__":
