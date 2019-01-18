@@ -26,6 +26,6 @@ def request(relative_url, method, data=None):
     if method == 'GET':
         response = requests.get(url, headers=headers, verify=False)
     elif method == 'POST':
-        pass
+        response = requests.post(url, headers=headers, verify=False, data=data)
 
     return response.json()
