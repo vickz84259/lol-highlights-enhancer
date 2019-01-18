@@ -6,6 +6,7 @@ import PySide2.QtCore as QtCore
 
 
 class HighlightsWatchThread(QtCore.QThread, FileSystemEventHandler):
+    highlight_created = QtCore.Signal(str)
 
     def __init__(self, path):
         super().__init__()
@@ -13,7 +14,7 @@ class HighlightsWatchThread(QtCore.QThread, FileSystemEventHandler):
         self.path = path
 
     def on_created(self, event):
-        print(event.src_path)
+        self.highlight_created.emit(event.src_path)
 
     def exit(self):
         self.observer.stop()
