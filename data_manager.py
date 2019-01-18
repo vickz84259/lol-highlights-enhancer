@@ -61,12 +61,11 @@ class DataStore():
 
     @classmethod
     def setup_preferences(cls):
-        current_summoner = network.request(
-            '/lol-summoner/v1/current-summoner', 'GET')
+        current_summoner = network.get('/lol-summoner/v1/current-summoner')
         user_name = current_summoner['displayName']
 
-        highlights_folder = network.request(
-            '/lol-highlights/v1/highlights-folder-path', 'GET')
+        highlights_folder = network.get(
+            '/lol-highlights/v1/highlights-folder-path')
 
         preferences = cls.get_preferences()
 
@@ -79,7 +78,7 @@ class DataStore():
 
     @classmethod
     def setup_highlights(cls):
-        highlights = network.request('/lol-highlights/v1/highlights', 'POST')
+        highlights = network.post('/lol-highlights/v1/highlights')
 
         for highlight in highlights:
             name = highlight['name']

@@ -2,7 +2,7 @@ import base64
 
 import requests
 
-import league
+import data_manager as ds
 
 
 def get_auth_header(token):
@@ -14,8 +14,8 @@ def get_auth_header(token):
     return authorization_header
 
 
-def request(relative_url, method, data=None):
-    token, port = league.get_connection_details()
+def __request(relative_url, method, data=None):
+    token, port = ds.DataStore.get_connection_details()
     base_url = f'https://127.0.0.1:{port}'
     url = f'{base_url}{relative_url}'
 
@@ -29,3 +29,11 @@ def request(relative_url, method, data=None):
         response = requests.post(url, headers=headers, verify=False, data=data)
 
     return response.json()
+
+
+def get(relative_url):
+    return __request(relative_url, 'GET')
+
+
+def post(relative_url, data=None):
+    return __request(relative_url, 'POST', data=data)
