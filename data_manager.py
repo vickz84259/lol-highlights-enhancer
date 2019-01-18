@@ -1,9 +1,8 @@
-import re
-
 from ruamel.yaml import YAML
 
 import league
 import network
+import utils
 
 PREFERENCES_PATH = 'resources\\user_preferences.yaml'
 HIGHLIGHTS_PATH = 'highlights.yaml'
@@ -82,11 +81,11 @@ class DataStore():
 
         for highlight in highlights:
             name = highlight['name']
-            regex = re.match(r'\d+-\d+_(\w{2,3}\d?)-(\d+)_\d{2}', name)
+            result = utils.get_match_details(name)
 
-            if regex is not None:
-                highlight['region'] = regex.group(1)
-                highlight['match_id'] = regex.group(2)
+            if result is not None:
+                highlight['region'] = result['region']
+                highlight['match_id'] = result['match_id']
             else:
                 highlight['region'] = None
                 highlight['match_id'] = None
