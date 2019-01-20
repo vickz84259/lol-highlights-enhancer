@@ -8,7 +8,7 @@ import data_manager as ds
 def get_auth_header(token):
     # Creating the authorization header
     auth = f'riot:{token}'.encode()
-    b64encoded = base64.b64encode(auth).decode('ascii')
+    b64encoded = base64.b64encode(auth).decode()
     authorization_header = f'Basic {b64encoded}'
 
     return authorization_header
