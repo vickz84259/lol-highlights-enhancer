@@ -32,7 +32,12 @@ class WebSocketThread(QtCore.QThread):
         pass
 
     def on_open(self):
-        self.ws.send(json.dumps([5, 'OnJsonApiEvent']))
+        endpoints = [
+            'OnJsonApiEvent_lol-gameflow_v1_gameflow-phase',
+            'OnJsonApiEvent_lol-gameflow_v1_watch'
+        ]
+        for endpoint in endpoints:
+            self.ws.send(json.dumps([5, endpoint]))
 
     def run(self):
         token, port = DataStore.get_connection_details()
@@ -55,5 +60,8 @@ if __name__ == "__main__":
     thread = WebSocketThread()
     thread.start()
 
-    while True:
-        pass
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        thread.exit()
