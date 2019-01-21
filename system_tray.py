@@ -37,10 +37,28 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         quit_action.triggered.connect(self.handle_exit)
         quit_action.triggered.connect(QtWidgets.qApp.quit)
 
+        self.minimize_action = context_menu.addAction('Minimize')
+        self.minimize_action.triggered.connect(self.hide_window)
+
         self.setContextMenu(context_menu)
 
     def icon_activated(self, reason):
         print(reason)
+
+    def show_window(self):
+        context_menu = self.contextMenu()
+        context_menu.removeAction(self.show_action)
+        context_menu.addAction(self.minimize_action)
+
+        self.window.show()
+
+    def hide_window(self):
+        context_menu = self.contextMenu()
+        context_menu.removeAction(self.minimize_action)
+        self.show_action = context_menu.addAction('Show window')
+        self.show_action.triggered.connect(self.show_window)
+
+        self.window.hide()
 
     def handle_exit(self):
         self.show_notification('The application is closing.')
