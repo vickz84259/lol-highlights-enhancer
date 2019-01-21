@@ -1,4 +1,12 @@
+import base64
+
 from ruamel.yaml import YAML
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
+from Crypto.Util import Padding
+
+import keyring
+import requests
 
 import league
 import network
@@ -6,6 +14,8 @@ import utils
 
 PREFERENCES_PATH = 'resources\\user_preferences.yaml'
 HIGHLIGHTS_PATH = 'highlights.yaml'
+
+PLATFORM = 'lol-highlights-enhancer'
 
 
 class DataStore():
@@ -54,9 +64,46 @@ class DataStore():
         cls.__save(data, 'highlights', to_file)
 
     @classmethod
+    def get_gfycat_secrets(cls):
+        key = keyring.get_password(PLATFORM, 'puuid')
+        client_id = keyring.get_password(PLATFORM, 'client_id')
+        client_secret = keyring.get_password(PLATFORM, 'client_secret')
+
+        return (cls.decrypt(key, client_id), cls.decrypt(key, client_secret))
+
+    @classmethod
+    def get_streamable_secrets(cls):
+        key = keyring.get_password(PLATFORM, 'puuid')
+        auth = keyring.get_password(PLATFORM, 'Authorization')
+
+        return cls.decrypt(key, auth)
+
+    @classmethod
     def setup(cls):
         cls.setup_preferences()
         cls.setup_highlights()
+
+        cls.setup_client_secrets()
+
+    @classmethod
+    def setup_client_secrets(cls):
+        preferences = cls.get_preferences()
+
+        user_name = preferences['user_name']
+        region = preferences['region']
+        url = f'https://slick.co.ke/v1/summoner/{region}/{user_name}'
+
+        summoner_details = requests.get(url).json()
+        keyring.set_password(PLATFORM, 'puuid', summoner_details['puuid'])
+
+        gfycat = summoner_details['secrets']['gfycat']
+        keyring.set_password(PLATFORM, 'client_id', gfycat['client_id'])
+        keyring.set_password(PLATFORM, 'client_secret',
+                             gfycat['client_secret'])
+
+        streamable = summoner_details['secrets']['streamable']
+        keyring.set_password(PLATFORM, 'Authorization',
+                             streamable['Authorization'])
 
     @classmethod
     def setup_preferences(cls):
@@ -72,6 +119,11 @@ class DataStore():
         preferences['user_name'] = user_name
         preferences['current-highlights-folder'] = highlights_folder
         preferences['lol-highlights-folder'].append(highlights_folder)
+
+        region = network.get(
+            '/lol-platform-config/v1/namespaces/LoginDataPacket/platformId')
+        region = 'na1' if region == 'NA' else region.lower()
+        preferences['region'] = region
 
         cls.save_preferences(preferences, to_file=True)
 
@@ -98,3 +150,19 @@ class DataStore():
             connection_details = league.get_connection_details()
 
         return connection_details
+
+    @classmethod
+    def decrypt(cls, key, data):
+        bytes_input = base64.b64decode(data.encode())
+
+        block_size = 16
+        nonce = bytes_input[:block_size]
+        tag = bytes_input[block_size:block_size * 2]
+        ciphertext = bytes_input[block_size * 2:]
+
+        key = SHA256.new(key.encode()).digest()
+        cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+        padded_data = cipher.decrypt_and_verify(ciphertext, tag)
+
+        data = Padding.unpad(padded_data, block_size).decode()
+        return data
