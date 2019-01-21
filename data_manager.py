@@ -1,0 +1,168 @@
+import base64
+
+from ruamel.yaml import YAML
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
+from Crypto.Util import Padding
+
+import keyring
+import requests
+
+import league
+import network
+import utils
+
+PREFERENCES_PATH = 'resources\\user_preferences.yaml'
+HIGHLIGHTS_PATH = 'highlights.yaml'
+
+PLATFORM = 'lol-highlights-enhancer'
+
+
+class DataStore():
+    connection_details = None
+
+    __internal_data = {
+        'preferences': {'file_name': PREFERENCES_PATH, 'data': None},
+        'highlights': {'file_name': HIGHLIGHTS_PATH, 'data': None}}
+
+    @classmethod
+    def __save(cls, data, type, to_file=False):
+        file_name = cls.__internal_data[type]['file_name']
+        if to_file:
+            with open(file_name, 'w') as file:
+                yaml = YAML(typ='safe')
+                yaml.dump(data, file)
+
+        cls.__internal_data[type]['data'] = data
+
+    @classmethod
+    def __get(cls, type):
+        file_name = cls.__internal_data[type]['file_name']
+        data = cls.__internal_data[type]['data']
+
+        if data is None:
+            with open(file_name) as file:
+                yaml = YAML(typ='safe')
+                cls.__internal_data[type]['data'] = yaml.load(file)
+
+        return cls.__internal_data[type]['data']
+
+    @classmethod
+    def get_preferences(cls):
+        return cls.__get('preferences')
+
+    @classmethod
+    def get_highlights(cls):
+        return cls.__get('highlights')
+
+    @classmethod
+    def save_preferences(cls, data, to_file=False):
+        cls.__save(data, 'preferences', to_file)
+
+    @classmethod
+    def save_highlights(cls, data, to_file=False):
+        cls.__save(data, 'highlights', to_file)
+
+    @classmethod
+    def get_gfycat_secrets(cls):
+        key = keyring.get_password(PLATFORM, 'puuid')
+        client_id = keyring.get_password(PLATFORM, 'client_id')
+        client_secret = keyring.get_password(PLATFORM, 'client_secret')
+
+        return (cls.decrypt(key, client_id), cls.decrypt(key, client_secret))
+
+    @classmethod
+    def get_streamable_secrets(cls):
+        key = keyring.get_password(PLATFORM, 'puuid')
+        auth = keyring.get_password(PLATFORM, 'Authorization')
+
+        return cls.decrypt(key, auth)
+
+    @classmethod
+    def setup(cls):
+        cls.setup_preferences()
+        cls.setup_highlights()
+
+        cls.setup_client_secrets()
+
+    @classmethod
+    def setup_client_secrets(cls):
+        preferences = cls.get_preferences()
+
+        user_name = preferences['user_name']
+        region = preferences['region']
+        url = f'https://slick.co.ke/v1/summoner/{region}/{user_name}'
+
+        summoner_details = requests.get(url).json()
+        keyring.set_password(PLATFORM, 'puuid', summoner_details['puuid'])
+
+        gfycat = summoner_details['secrets']['gfycat']
+        keyring.set_password(PLATFORM, 'client_id', gfycat['client_id'])
+        keyring.set_password(PLATFORM, 'client_secret',
+                             gfycat['client_secret'])
+
+        streamable = summoner_details['secrets']['streamable']
+        keyring.set_password(PLATFORM, 'Authorization',
+                             streamable['Authorization'])
+
+    @classmethod
+    def setup_preferences(cls):
+        current_summoner = network.get('/lol-summoner/v1/current-summoner')
+        user_name = current_summoner['displayName']
+
+        highlights_folder = network.get(
+            '/lol-highlights/v1/highlights-folder-path')
+
+        preferences = cls.get_preferences()
+
+        preferences['first_time'] = False
+        preferences['user_name'] = user_name
+        preferences['current-highlights-folder'] = highlights_folder
+        preferences['lol-highlights-folder'].append(highlights_folder)
+
+        region = network.get(
+            '/lol-platform-config/v1/namespaces/LoginDataPacket/platformId')
+        region = 'na1' if region == 'NA' else region.lower()
+        preferences['region'] = region
+
+        cls.save_preferences(preferences, to_file=True)
+
+    @classmethod
+    def setup_highlights(cls):
+        highlights = network.post('/lol-highlights/v1/highlights')
+
+        for highlight in highlights:
+            name = highlight['name']
+            result = utils.get_match_details(name)
+
+            if result is not None:
+                highlight['region'] = result['region']
+                highlight['match_id'] = result['match_id']
+            else:
+                highlight['region'] = None
+                highlight['match_id'] = None
+
+        cls.save_highlights(highlights, to_file=True)
+
+    @classmethod
+    def get_connection_details(cls):
+        if cls.connection_details is None:
+            connection_details = league.get_connection_details()
+
+        return connection_details
+
+    @classmethod
+    def decrypt(cls, key, data):
+        bytes_input = base64.b64decode(data.encode())
+
+        block_size = 16
+        nonce = bytes_input[:block_size]
+        tag = bytes_input[block_size:block_size * 2]
+        ciphertext = bytes_input[block_size * 2:]
+
+        key = SHA256.new(key.encode()).digest()
+        cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+        padded_data = cipher.decrypt_and_verify(ciphertext, tag)
+
+        data = Padding.unpad(padded_data, block_size).decode()
+        return data
