@@ -55,3 +55,33 @@ def get_appropriate_size(bytes):
     for key, value in sizes.items():
         if value >= 1 and value < 1000:
             return f'{round(value, 2)} {key}'
+
+
+def get_mode(game_mode, queue_id):
+    modes = {'ODIN': 'Dominion/Crystal Scar', 'ARAM': 'ARAM', 'URF': 'URF',
+             'DOOMBOTSTEEMO': 'Doom Bots', 'ONEFORALL': 'One for all',
+             'ASCENSION': 'Ascension', 'FIRSTBLOOD': 'Snowdown Showdown',
+             'KINGPORO': 'Legend of the Poro King', 'SIEGE': 'Nexus Siege',
+             'ASSASSINATE': 'Blood Hunt Assassin', 'GAMEMODEX': 'Nexus Blitz',
+             'ARSR': 'All Random Summoner\'s Rift',
+             'DARKSTAR': 'Dark Star: Singularity',
+             'PROJECT': 'PROJECT: Hunters', 'ODYSSEY': 'Odyssey: Extraction',
+             'STARGUARDIAN': 'Star Guardian Invasion'}
+
+    queue_ids = {'75': '6v6 Hexakill', '98': '6v6 Hexakill', '310': 'Nemesis',
+                 '313': 'Black Market Brawlers', '325': 'All Random games',
+                 '400': '5V5 Draft Pick', '420': '5v5 Ranked Solo',
+                 '430': '5v5 Blind Pick', '440': '5v5 Ranked Flex',
+                 '460': '3v3 Blind Pick', '470': '3v3 Ranked Flex',
+                 '700': 'Clash', '900': 'ARURF', '76': 'Ultra Rapid Fire',
+                 '1010': 'Snow ARURF', '2': '5v5 Blind Pick',
+                 '4': '5v5 Ranked Solo', '8': '3v3 Normal',
+                 '9': '3v3 Ranked Flex', '14': '5v5 Draft Pick',
+                 '318': 'ARURF'}
+
+    if game_mode == 'URF' or game_mode == 'CLASSIC':
+        result = queue_ids.get(str(queue_id), '')
+    else:
+        result = modes.get(game_mode, '')
+
+    return result

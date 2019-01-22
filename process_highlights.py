@@ -2,6 +2,7 @@ import PySide2.QtCore as QtCore
 import requests
 
 from data_manager import DataStore
+import utils
 
 
 class Thread(QtCore.QThread):
@@ -46,7 +47,11 @@ class Thread(QtCore.QThread):
             match_id = details['match_id']
             if match_id in retrieved:
                 full_details = retrieved[match_id]
-                self.highlights[name]['game_mode'] = full_details['gameMode']
+
+                game_mode = full_details['gameMode']
+                queue_id = full_details['queueId']
+                mode = utils.get_mode(game_mode, queue_id)
+                self.highlights[name]['game_mode'] = mode
 
                 for participant in full_details['participantIdentities']:
                     if participant['player']['summonerName'] == summoner_name:
