@@ -131,6 +131,7 @@ class DataStore():
     def setup_highlights(cls):
         highlights = network.post('/lol-highlights/v1/highlights')
 
+        highlights_dict = {}
         for highlight in highlights:
             name = highlight['name']
             result = utils.get_match_details(name)
@@ -138,11 +139,18 @@ class DataStore():
             if result is not None:
                 highlight['region'] = result['region']
                 highlight['match_id'] = result['match_id']
+
+                patch_major = result['patch_major']
+                patch_minor = result['patch_minor']
+                highlight['patch_version'] = f'{patch_major}.{patch_minor}'
             else:
                 highlight['region'] = None
                 highlight['match_id'] = None
+                highlight['patch_version'] = None
 
-        cls.save_highlights(highlights, to_file=True)
+            highlights_dict[name] = highlight
+
+        cls.save_highlights(highlights_dict, to_file=True)
 
     @classmethod
     def get_connection_details(cls):
@@ -169,5 +177,8 @@ class DataStore():
 
     @classmethod
     def get_highlight_names(cls):
-        result = [highlight['name'] for highlight in cls.get_highlights()]
-        return result
+        return list(cls.get_highlights().keys())
+
+    @classmethod
+    def get_highlight(cls, name):
+        return cls.get_highlights().get(name)
