@@ -139,7 +139,7 @@ class DataStore():
         normalised_region = network.get(
             '/lol-platform-config/v1/namespaces/LoginDataPacket/'
             'competitiveRegion')
-        preferences['normalised_region'] = normalised_region
+        preferences['normalised_region'] = normalised_region.lower()
 
         cls.save_preferences(preferences, to_file=True)
 
@@ -153,7 +153,7 @@ class DataStore():
             result = utils.get_match_details(name)
 
             if result is not None:
-                highlight['region'] = result['region']
+                highlight['region'] = result['region'].lower()
                 highlight['match_id'] = result['match_id']
 
                 patch_major = result['patch_major']
@@ -217,5 +217,5 @@ class DataStore():
         champions = cls.get_champions()
 
         for champion, champion_data in champions['data'].items():
-            if champion_data['key'] == id:
+            if int(champion_data['key']) == id:
                 return champion_data['name']
