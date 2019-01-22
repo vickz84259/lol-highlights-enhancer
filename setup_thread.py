@@ -16,6 +16,7 @@ class Thread(QtCore.QThread):
         self.is_first_time = is_first_time
 
     def exit(self):
+        self.running = False
         self.wait()
 
     def run(self):
