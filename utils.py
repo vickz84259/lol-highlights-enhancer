@@ -44,3 +44,14 @@ def is_highlight(file_name):
         result = True
 
     return result
+
+
+def get_appropriate_size(bytes):
+    kilobytes = bytes/1024
+    megabytes = kilobytes/1024
+    gigabyte = megabytes/1024
+
+    sizes = {'KB': kilobytes, 'MB': megabytes, 'GB': gigabyte}
+    for key, value in sizes.items():
+        if value >= 1 and value < 1000:
+            return f'{round(value, 2)} {key}'

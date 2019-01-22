@@ -2,6 +2,7 @@ import PySide2.QtWidgets as QtWidgets
 import PySide2.QtCore as QtCore
 
 from data_manager import DataStore
+import utils
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -51,6 +52,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         main_layout.addLayout(self.__setup_label_layout('name'))
         main_layout.addLayout(self.__setup_label_layout('patch'))
+        main_layout.addLayout(self.__setup_label_layout('size'))
 
         return main_layout
 
@@ -60,6 +62,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.widgets['name'].setText(highlight_details['name'])
         self.widgets['patch'].setText(highlight_details['patch_version'])
+
+        size_in_bytes = highlight_details['fileSizeBytes']
+        self.widgets['size'].setText(utils.get_appropriate_size(size_in_bytes))
 
     def closeEvent(self, event):
         self.closing_event.emit()
