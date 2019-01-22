@@ -3,6 +3,7 @@ import PySide2.QtWidgets as QtWidgets
 from data_manager import DataStore
 from watch_highlights import HighlightsWatchThread
 import league
+import process_highlights
 import setup_thread
 import window
 import ws
@@ -95,6 +96,13 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     def show_notification(self, message):
         self.showMessage('Lol-Highlights-Enhancer', message, self.NoIcon)
 
+    def get_match_details(self):
+        processor_thread = process_highlights.Thread()
+        processor_thread.start()
+
+        processor_thread.status.connect(self.window.status.showMessage)
+        self.threads.append(processor_thread)
+
     def process_status(self, status):
         self.preferences = DataStore.get_preferences()
         is_first_time = self.preferences['first_time']
@@ -117,6 +125,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
             self.setup_thread.start()
 
             self.setup_thread.done_setup.connect(self.window.init_UI)
+            self.setup_thread.done_setup.connect(self.get_match_details)
             self.setup_thread.login_status.connect(
                 self.window.status.showMessage)
 
