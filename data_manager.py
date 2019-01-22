@@ -166,3 +166,8 @@ class DataStore():
 
         data = Padding.unpad(padded_data, block_size).decode()
         return data
+
+    @classmethod
+    def get_highlight_names(cls):
+        result = [highlight['name'] for highlight in cls.get_highlights()]
+        return result
