@@ -26,15 +26,40 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.highlights_list = QtWidgets.QListWidget()
         self.highlights_list.addItems(DataStore.get_highlight_names())
-
-        self.highlight_details = QtWidgets.QListWidget()
-        for i in range(10):
-            self.highlight_details.addItem('Item %s' % (i + 1))
+        self.highlights_list.itemClicked.connect(self.item_clicked)
 
         hbox.addWidget(self.highlights_list)
-        hbox.addWidget(self.highlight_details)
+        hbox.addLayout(self.setup_details_layout(), 1)
 
         self.centralWidget().setLayout(hbox)
+
+    def __setup_label_layout(self, name):
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(QtWidgets.QLabel(f'{name.capitalize()}:'))
+
+        name_label = QtWidgets.QLabel('')
+        layout.addWidget(name_label, 1)
+        self.widgets[name] = name_label
+
+        return layout
+
+    def setup_details_layout(self):
+        self.widgets = {}
+
+        main_layout = QtWidgets.QVBoxLayout()
+
+        main_layout.addLayout(self.__setup_label_layout('name'))
+        main_layout.addLayout(self.__setup_label_layout('patch'))
+
+        return main_layout
+
+    def item_clicked(self, item):
+        highlight_name = item.text()
+        highlight_details = DataStore.get_highlight(highlight_name)
+
+        self.widgets['name'].setText(highlight_details['name'])
+        self.widgets['patch'].setText(highlight_details['patch_version'])
 
     def closeEvent(self, event):
         self.closing_event.emit()
