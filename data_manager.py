@@ -14,6 +14,7 @@ import utils
 
 PREFERENCES_PATH = 'resources\\user_preferences.yaml'
 HIGHLIGHTS_PATH = 'highlights.yaml'
+CHAMPIONS_PATH = 'resources\\champions.json'
 
 PLATFORM = 'lol-highlights-enhancer'
 
@@ -23,7 +24,8 @@ class DataStore():
 
     __internal_data = {
         'preferences': {'file_name': PREFERENCES_PATH, 'data': None},
-        'highlights': {'file_name': HIGHLIGHTS_PATH, 'data': None}}
+        'highlights': {'file_name': HIGHLIGHTS_PATH, 'data': None},
+        'champions': {'file_name': CHAMPIONS_PATH, 'data': None}}
 
     @classmethod
     def __save(cls, data, type, to_file=False):
@@ -56,12 +58,20 @@ class DataStore():
         return cls.__get('highlights')
 
     @classmethod
+    def get_champions(cls):
+        return cls.__get('champions')
+
+    @classmethod
     def save_preferences(cls, data, to_file=False):
         cls.__save(data, 'preferences', to_file)
 
     @classmethod
     def save_highlights(cls, data, to_file=False):
         cls.__save(data, 'highlights', to_file)
+
+    @classmethod
+    def save_champions(cls, data, to_file=False):
+        cls.__save(data, 'champions', to_file)
 
     @classmethod
     def get_gfycat_secrets(cls):
@@ -82,6 +92,7 @@ class DataStore():
     def setup(cls):
         cls.setup_preferences()
         cls.setup_highlights()
+        cls.setup_champions()
 
         cls.setup_client_secrets()
 
@@ -158,6 +169,19 @@ class DataStore():
         cls.save_highlights(highlights_dict, to_file=True)
 
     @classmethod
+    def setup_champions(cls):
+        preferences = cls.get_preferences()
+        region = preferences['normalised_region']
+        url = f'https://ddragon.leagueoflegends.com/realms/{region}.json'
+
+        latest_version = requests.get(url).json()['n']['champion']
+        base_url = 'https://ddragon.leagueoflegends.com/cdn/'
+        url = f'{base_url}{latest_version}/data/en_US/champion.json'
+        champions = requests.get(url).json()
+
+        cls.save_champions(champions, to_file=True)
+
+    @classmethod
     def get_connection_details(cls):
         if cls.connection_details is None:
             connection_details = league.get_connection_details()
@@ -187,3 +211,11 @@ class DataStore():
     @classmethod
     def get_highlight(cls, name):
         return cls.get_highlights().get(name)
+
+    @classmethod
+    def get_champion_by_id(cls, id):
+        champions = cls.get_champions()
+
+        for champion, champion_data in champions['data'].items():
+            if champion_data['key'] == id:
+                return champion_data['name']
