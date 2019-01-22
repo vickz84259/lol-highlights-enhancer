@@ -125,6 +125,11 @@ class DataStore():
         region = 'na1' if region == 'NA' else region.lower()
         preferences['region'] = region
 
+        normalised_region = network.get(
+            '/lol-platform-config/v1/namespaces/LoginDataPacket/'
+            'competitiveRegion')
+        preferences['normalised_region'] = normalised_region
+
         cls.save_preferences(preferences, to_file=True)
 
     @classmethod
