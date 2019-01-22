@@ -34,10 +34,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.centralWidget().setLayout(hbox)
 
-    def __setup_label_layout(self, name):
+    def __setup_label_layout(self, name, string=None):
 
         layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(QtWidgets.QLabel(f'{name.capitalize()}:'))
+
+        if string is None:
+            string = name.capitalize()
+        layout.addWidget(QtWidgets.QLabel(f'{string}:'))
 
         name_label = QtWidgets.QLabel('')
         layout.addWidget(name_label, 1)
@@ -51,7 +54,12 @@ class MainWindow(QtWidgets.QMainWindow):
         main_layout = QtWidgets.QVBoxLayout()
 
         main_layout.addLayout(self.__setup_label_layout('name'))
+        main_layout.addLayout(
+            self.__setup_label_layout('played_as', 'Played as'))
         main_layout.addLayout(self.__setup_label_layout('patch'))
+        main_layout.addLayout(
+            self.__setup_label_layout('game_mode', 'Game Mode'))
+        main_layout.addLayout(self.__setup_label_layout('win', 'Outcome'))
         main_layout.addLayout(self.__setup_label_layout('size'))
 
         return main_layout
@@ -65,6 +73,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
         size_in_bytes = highlight_details['fileSizeBytes']
         self.widgets['size'].setText(utils.get_appropriate_size(size_in_bytes))
+
+        self.widgets['played_as'].setText(
+            highlight_details.get('played_as', 'Not available'))
+        self.widgets['game_mode'].setText(
+            highlight_details.get('game_mode', 'Not available'))
+
+        win_condition = highlight_details.get('win')
+        if win_condition is None:
+            outcome = 'Not available'
+        elif win_condition:
+            outcome = 'Won'
+        else:
+            outcome = 'Lost'
+        self.widgets['win'].setText(outcome)
 
     def closeEvent(self, event):
         self.closing_event.emit()
