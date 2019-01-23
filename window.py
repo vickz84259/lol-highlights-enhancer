@@ -8,6 +8,7 @@ import utils
 class MainWindow(QtWidgets.QMainWindow):
     closing_event = QtCore.Signal()
     action = QtCore.Signal(str, str)
+    minimise = QtCore.Signal()
 
     def __init__(self):
         super().__init__()
@@ -73,6 +74,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.widgets[name] = name_label
 
         return layout
+
+    def changeEvent(self, event):
+        if event.type() == QtCore.QEvent.WindowStateChange:
+            if self.windowState() & QtCore.Qt.WindowMinimized:
+                self.minimise.emit()
+
+        super().changeEvent(event)
 
     def gfyat_setting_changed(self, state):
         preference = DataStore.get_preference('upload_new_highlights')

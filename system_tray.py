@@ -40,8 +40,10 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
         self.window = window.MainWindow()
         self.window.show()
+
         self.window.closing_event.connect(self.handle_exit)
         self.window.action.connect(self.handle_buttons)
+        self.window.minimise.connect(self.hide_window)
 
         self.preferences = DataStore.get_preferences()
         is_first_time = self.preferences['first_time']
