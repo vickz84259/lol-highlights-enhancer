@@ -30,8 +30,9 @@ class ProcessCheckerThread(QtCore.QThread):
                 self.status.emit('not_running')
             else:
                 self.status.emit('running')
+                self.running = False
             finally:
-                time.sleep(10)
+                time.sleep(1)
 
 
 def get_process():

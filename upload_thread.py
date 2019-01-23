@@ -18,6 +18,8 @@ class Thread(QtCore.QThread):
 
     def exit(self):
         self.running = False
+        self.is_paused = False
+        self.skip = True
         self.wait()
 
     def pause(self):
@@ -29,13 +31,17 @@ class Thread(QtCore.QThread):
     def run(self):
         self.running = True
         self.is_paused = False
+        self.skip = False
 
         while self.running:
             try:
                 highlight_name, platform = self.q.get(timeout=1)
 
                 while self.is_paused:
-                    time.sleep(5)
+                    time.sleep(1)
+
+                if self.skip:
+                    break
 
                 highlight = DataStore.get_highlight(highlight_name)
 
