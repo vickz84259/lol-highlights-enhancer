@@ -200,6 +200,8 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
                 self.window.status.showMessage(msg)
                 self.notification_shown = True
         elif status == 'running' and not self.ws_is_running:
+            self.checker_thread.exit()
+
             self.websocket_thread = ws.WebSocketThread()
             self.websocket_thread.start()
             self.websocket_thread.api_event.connect(self.handle_api_events)

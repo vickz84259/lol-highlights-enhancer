@@ -61,6 +61,7 @@ def get_process():
             result = re.sub(' +', ' ', line).rstrip()
             break
 
+    proc.terminate()
     if not result:
         raise LeagueNotRunningException
 
