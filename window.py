@@ -48,6 +48,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return layout
 
+    def __setup_sites_layout(self, name):
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(QtWidgets.QLabel(f'{name.capitalize()}:'))
+
+        button = QtWidgets.QPushButton('Upload')
+        button.setDisabled(True)
+        layout.addWidget(button, 1)
+
+        self.widgets[name] = button
+
+        return layout
+
     def setup_details_layout(self):
         self.widgets = {}
 
@@ -57,15 +69,28 @@ class MainWindow(QtWidgets.QMainWindow):
         main_layout.addLayout(
             self.__setup_label_layout('played_as', 'Played as'))
         main_layout.addLayout(self.__setup_label_layout('patch'))
+
         main_layout.addLayout(
             self.__setup_label_layout('game_mode', 'Game Mode'))
         main_layout.addLayout(self.__setup_label_layout('win', 'Outcome'))
         main_layout.addLayout(self.__setup_label_layout('size'))
 
+        main_layout.addLayout(self.__setup_sites_layout('gfycat'))
+        main_layout.addLayout(self.__setup_sites_layout('streamable'))
+
         return main_layout
+
+    def set_button(self, name, link):
+        if link is None:
+            self.widgets[name].setText('Upload')
+        else:
+            self.widgets[name].setText('View')
+
+        self.widgets[name].setDisabled(False)
 
     def item_clicked(self, item):
         highlight_name = item.text()
+        self.selected = highlight_name
         highlight_details = DataStore.get_highlight(highlight_name)
 
         self.widgets['name'].setText(highlight_details['name'])
@@ -87,6 +112,9 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             outcome = 'Lost'
         self.widgets['win'].setText(outcome)
+
+        self.set_button('gfycat', highlight_details['gfycat'])
+        self.set_button('streamable', highlight_details['streamable'])
 
     def closeEvent(self, event):
         self.closing_event.emit()

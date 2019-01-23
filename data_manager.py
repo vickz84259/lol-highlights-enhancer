@@ -164,6 +164,9 @@ class DataStore():
                 highlight['match_id'] = None
                 highlight['patch_version'] = None
 
+            highlight['gfycat'] = None
+            highlight['streamable'] = None
+
             highlights_dict[name] = highlight
 
         cls.save_highlights(highlights_dict, to_file=True)
