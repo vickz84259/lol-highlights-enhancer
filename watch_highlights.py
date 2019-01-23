@@ -11,8 +11,6 @@ import utils
 
 
 class HighlightsWatchThread(QtCore.QThread, FileSystemEventHandler):
-    highlight_created = QtCore.Signal(str)
-
     def __init__(self, path):
         super().__init__()
 
@@ -20,10 +18,10 @@ class HighlightsWatchThread(QtCore.QThread, FileSystemEventHandler):
         self.highlights = []
 
     def __get_int_trail(self, file_name):
-        return int(re.search(r'_(\d{2})', file_name).group(1))
+        return int(re.search(r'_(\d{2,3})', file_name).group(1))
 
     def __sub_trail(self, new_trail, file_name):
-        return re.sub(r'_\d{2}', f'_{new_trail}', file_name)
+        return re.sub(r'_\d{2,3}', f'_{new_trail}', file_name)
 
     def __rename(self, old_name, new_name):
         old_file = os.path.join(self.path, old_name)
@@ -34,7 +32,8 @@ class HighlightsWatchThread(QtCore.QThread, FileSystemEventHandler):
     def __cleanup(self):
         for file_name in self.highlights:
             old_trail = self.__get_int_trail(file_name)
-            new_name = self.__sub_trail(str(old_trail - 1).zfill(2), file_name)
+            new_name = self.__sub_trail(
+                str(old_trail - 100).zfill(2), file_name)
 
             self.__rename(file_name, new_name)
 
@@ -50,7 +49,7 @@ class HighlightsWatchThread(QtCore.QThread, FileSystemEventHandler):
             new_number = old_number + 1
         else:
             trailing_number = self.__get_int_trail(file_name)
-            new_number = trailing_number + 1
+            new_number = trailing_number + 100
 
         new_trail = str(new_number).zfill(2)
         new_name = self.__sub_trail(new_trail, file_name)
