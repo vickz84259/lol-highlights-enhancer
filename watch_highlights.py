@@ -11,6 +11,8 @@ import utils
 
 
 class HighlightsWatchThread(QtCore.QThread, FileSystemEventHandler):
+    done = QtCore.Signal(list)
+
     def __init__(self, path):
         super().__init__()
 
@@ -30,12 +32,16 @@ class HighlightsWatchThread(QtCore.QThread, FileSystemEventHandler):
         os.rename(old_file, new_file)
 
     def __cleanup(self):
+        new_highlights = []
         for file_name in self.highlights:
             old_trail = self.__get_int_trail(file_name)
             new_name = self.__sub_trail(
                 str(old_trail - 100).zfill(2), file_name)
 
             self.__rename(file_name, new_name)
+            new_highlights.append(utils.get_filename(new_name))
+
+        self.done.emit(new_highlights)
 
     def on_created(self, event):
         new_path = event.src_path

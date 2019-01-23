@@ -213,6 +213,35 @@ class DataStore():
         cls.save_highlights(highlights_dict, to_file=True)
 
     @classmethod
+    def refresh_highlights(cls):
+        highlights = network.post('/lol-highlights/v1/highlights')
+
+        old_highlights = cls.get_highlights()
+        for highlight in highlights:
+
+            name = highlight['name']
+            if name not in old_highlights:
+                result = utils.get_match_details(name)
+                if result is not None:
+                    highlight['region'] = result['region'].lower()
+                    highlight['match_id'] = result['match_id']
+
+                    patch_major = result['patch_major']
+                    patch_minor = result['patch_minor']
+                    highlight['patch_version'] = f'{patch_major}.{patch_minor}'
+                else:
+                    highlight['region'] = None
+                    highlight['match_id'] = None
+                    highlight['patch_version'] = None
+
+                highlight['gfycat'] = None
+                highlight['streamable'] = None
+
+                old_highlights[name] = highlight
+
+        cls.save_highlights(old_highlights, to_file=True)
+
+    @classmethod
     def setup_champions(cls):
         preferences = cls.get_preferences()
         region = preferences['normalised_region']

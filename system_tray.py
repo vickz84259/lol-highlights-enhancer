@@ -141,9 +141,25 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
                 higlights_path = self.preferences['current-highlights-folder']
                 self.highlights_thread = HighlightsWatchThread(higlights_path)
                 self.highlights_thread.start()
+
+                self.highlights_thread.done.connect(self.handle_new_highlights)
             else:
                 self.highlights_thread.exit()
-                self.window.refresh()
+
+    def handle_new_highlights(self, highlights):
+        DataStore.refresh_highlights()
+
+        new_highlights = {}
+        for highlight_name in highlights:
+            new_highlights[highlight_name] = DataStore.get_highlight(
+                highlight_name)
+
+        processor_thread = process_highlights.Thread(new_highlights)
+        processor_thread.start()
+
+        processor_thread.status.connect(self.window.status.showMessage)
+        processor_thread.done_status.connect(self.window.refresh)
+        self.threads.append(processor_thread)
 
     def show_notification(self, message):
         self.showMessage('Lol-Highlights-Enhancer', message, self.NoIcon)
