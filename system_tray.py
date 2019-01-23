@@ -74,6 +74,8 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         highlight[service] = video_url
         DataStore.save_highlight(highlight_name, highlight)
 
+        self.window.refresh()
+
     def setup_context_menu(self):
         context_menu = QtWidgets.QMenu()
 
@@ -141,6 +143,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
                 self.highlights_thread.start()
             else:
                 self.highlights_thread.exit()
+                self.window.refresh()
 
     def show_notification(self, message):
         self.showMessage('Lol-Highlights-Enhancer', message, self.NoIcon)
@@ -151,6 +154,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         processor_thread.start()
 
         processor_thread.status.connect(self.window.status.showMessage)
+        processor_thread.done_status.connect(self.window.refresh)
         self.threads.append(processor_thread)
 
     def process_status(self, status):

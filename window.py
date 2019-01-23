@@ -23,11 +23,15 @@ class MainWindow(QtWidgets.QMainWindow):
         geometry = QtWidgets.QApplication.desktop().availableGeometry(self)
         self.setMinimumSize(geometry.width() * 0.4, geometry.height() * 0.5)
 
+        self.selected = None
+
     def init_UI(self):
         hbox = QtWidgets.QHBoxLayout()
 
         self.highlights_list = QtWidgets.QListWidget()
+
         self.highlights_list.addItems(DataStore.get_highlight_names())
+        self.highlights_list.sortItems(QtCore.Qt.DescendingOrder)
         self.highlights_list.itemClicked.connect(self.item_clicked)
 
         hbox.addWidget(self.highlights_list)
@@ -144,6 +148,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_button('gfycat', highlight_details['gfycat'])
         self.set_button('streamable', highlight_details['streamable'])
         self.set_button('gfycat_alternate', '')
+
+    def refresh(self):
+        self.highlights_list.clear()
+        self.highlights_list.addItems(DataStore.get_highlight_names())
+        self.highlights_list.sortItems(QtCore.Qt.DescendingOrder)
+
+        if self.selected is not None:
+            items = self.highlights_list.findItems(
+                self.selected, QtCore.Qt.MatchExactly)
+
+            if items:
+                for item in items:
+                    self.item_clicked(item)
 
     def closeEvent(self, event):
         self.closing_event.emit()

@@ -7,6 +7,7 @@ import utils
 
 class Thread(QtCore.QThread):
     status = QtCore.Signal(str)
+    done_status = QtCore.Signal()
 
     def __init__(self, highlights):
         super().__init__()
@@ -74,4 +75,6 @@ class Thread(QtCore.QThread):
             index += 1
 
         DataStore.save_partial_highlights(self.highlights, to_file=True)
+
         self.status.emit('Done')
+        self.done_status.emit()
