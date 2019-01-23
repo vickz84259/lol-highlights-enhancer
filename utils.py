@@ -53,7 +53,7 @@ def get_appropriate_size(bytes):
 
     sizes = {'KB': kilobytes, 'MB': megabytes, 'GB': gigabyte}
     for key, value in sizes.items():
-        if value >= 1 and value < 1000:
+        if value >= 0.1 and value < 1000:
             return f'{round(value, 2)} {key}'
 
 
