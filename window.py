@@ -113,6 +113,8 @@ class MainWindow(QtWidgets.QMainWindow):
             gfycat_text = self.widgets['gfycat'].text()
             if gfycat_text != 'Upload':
                 self.widgets[name].setDisabled(False)
+            else:
+                self.widgets[name].setDisabled(True)
 
     def item_clicked(self, item):
         highlight_name = item.text()

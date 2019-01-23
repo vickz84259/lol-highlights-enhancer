@@ -68,12 +68,11 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         if 'gfycat' in video_url:
             service = 'gfycat'
         elif 'streamable' in video_url:
-            service = 'gfycat'
+            service = 'streamable'
 
-        highlights = DataStore.get_highlights()
-        highlights[highlight_name][service] = video_url
-
-        DataStore.save_highlights(highlights, to_file=True)
+        highlight = DataStore.get_highlight(highlight_name)
+        highlight[service] = video_url
+        DataStore.save_highlight(highlight_name, highlight)
 
     def setup_context_menu(self):
         context_menu = QtWidgets.QMenu()
@@ -150,7 +149,8 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         self.showMessage('Lol-Highlights-Enhancer', message, self.NoIcon)
 
     def get_match_details(self):
-        processor_thread = process_highlights.Thread()
+        processor_thread = process_highlights.Thread(
+            DataStore.get_highlights())
         processor_thread.start()
 
         processor_thread.status.connect(self.window.status.showMessage)

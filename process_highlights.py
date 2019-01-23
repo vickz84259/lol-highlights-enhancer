@@ -8,8 +8,10 @@ import utils
 class Thread(QtCore.QThread):
     status = QtCore.Signal(str)
 
-    def __init__(self):
+    def __init__(self, highlights):
         super().__init__()
+
+        self.highlights = highlights
 
     def exit(self):
         self.running = False
@@ -17,7 +19,6 @@ class Thread(QtCore.QThread):
 
     def run(self):
         self.running = True
-        self.highlights = DataStore.get_highlights()
 
         match_ids = set()
         for details in self.highlights.values():
@@ -72,5 +73,5 @@ class Thread(QtCore.QThread):
                 f'Processing highlights: {percentage}%')
             index += 1
 
-        DataStore.save_highlights(self.highlights, to_file=True)
+        DataStore.save_partial_highlights(self.highlights, to_file=True)
         self.status.emit('Done')

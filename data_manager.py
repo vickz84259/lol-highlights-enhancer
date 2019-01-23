@@ -257,9 +257,24 @@ class DataStore():
         return cls.get_highlights().get(name)
 
     @classmethod
+    def save_highlight(cls, highlight_name, data):
+        highlight_dict = {}
+        highlight_dict[highlight_name] = data
+
+        cls.save_partial_highlights(highlight_dict, to_file=True)
+
+    @classmethod
     def get_champion_by_id(cls, id):
         champions = cls.get_champions()
 
         for champion, champion_data in champions['data'].items():
             if int(champion_data['key']) == id:
                 return champion_data['name']
+
+    @classmethod
+    def save_partial_highlights(cls, highlights, to_file=False):
+        base_highlights = cls.get_highlights()
+        for highlight_name, data in highlights.items():
+            base_highlights[highlight_name] = data
+
+        cls.save_highlights(base_highlights, to_file)
