@@ -23,16 +23,20 @@ class Thread(QtCore.QThread):
     def pause(self):
         self.is_paused = True
 
+    def resume(self):
+        self.is_paused = False
+
     def run(self):
         self.running = True
         self.is_paused = False
 
         while self.running:
             try:
+                highlight_name, platform = self.q.get(timeout=1)
+
                 while self.is_paused:
                     time.sleep(5)
 
-                highlight_name, platform = self.q.get(timeout=1)
                 highlight = DataStore.get_highlight(highlight_name)
 
                 file_path = highlight['filepath']

@@ -145,6 +145,16 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
                 self.highlights_thread.done.connect(self.handle_new_highlights)
             else:
                 self.highlights_thread.exit()
+        elif uri == '/lol-gameflow/v1/gameflow-phase':
+            if data == 'GameStart':
+                self.window.status.showMessage('Pausing Uploads')
+                for thread in self.thread_pool:
+                    thread.pause()
+
+            elif data == 'WaitingForStats':
+                self.window.status.showMessage('Resuming Uploads')
+                for thread in self.thread_pool:
+                    thread.resume()
 
     def handle_new_highlights(self, highlights):
         DataStore.refresh_highlights()
