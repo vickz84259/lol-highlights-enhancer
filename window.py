@@ -7,6 +7,7 @@ import utils
 
 class MainWindow(QtWidgets.QMainWindow):
     closing_event = QtCore.Signal()
+    action = QtCore.Signal(str, str)
 
     def __init__(self):
         super().__init__()
@@ -48,11 +49,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return layout
 
+    def gfycat_clicked(self):
+        self.action.emit('gfycat', self.selected)
+
+    def streamable_clicked(self):
+        self.action.emit('streamable', self.selected)
+
     def __setup_sites_layout(self, name):
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(QtWidgets.QLabel(f'{name.capitalize()}:'))
 
         button = QtWidgets.QPushButton('Upload')
+        button.clicked.connect(getattr(self, f'{name}_clicked'))
         button.setDisabled(True)
         layout.addWidget(button, 1)
 

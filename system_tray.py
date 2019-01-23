@@ -4,12 +4,16 @@ from data_manager import DataStore
 from watch_highlights import HighlightsWatchThread
 import league
 import process_highlights
+import queue
 import setup_thread
+import upload_thread
+import webbrowser
 import window
 import ws
 
 
 class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
+    MAX_UPLOAD_THREADS = 3
 
     def __init__(self, icon):
         super().__init__(icon)
@@ -30,17 +34,45 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         self.checker_thread.status.connect(self.process_status)
         self.threads.append(self.checker_thread)
 
+        self.setup_thread_pool()
         self.setup_context_menu()
 
         self.window = window.MainWindow()
         self.window.show()
         self.window.closing_event.connect(self.handle_exit)
+        self.window.action.connect(self.handle_buttons)
 
         self.preferences = DataStore.get_preferences()
         is_first_time = self.preferences['first_time']
 
         if not is_first_time:
             self.window.init_UI()
+
+    def setup_thread_pool(self):
+        self.queue = queue.SimpleQueue()
+
+        self.thread_pool = []
+        for x in range(self.MAX_UPLOAD_THREADS):
+            thread = upload_thread.Thread(self.queue)
+            thread.start()
+
+            thread.uploaded.connect(self.handle_upload_url)
+            self.thread_pool.append(thread)
+
+    def handle_upload_url(self, result):
+        highlight_name, video_url = result
+        self.window.status.showMessage(
+            f'Uploaded {highlight_name} as {video_url}')
+
+        if 'gfycat' in video_url:
+            service = 'gfycat'
+        elif 'streamable' in video_url:
+            service = 'gfycat'
+
+        highlights = DataStore.get_highlights()
+        highlights[highlight_name][service] = video_url
+
+        DataStore.save_highlights(highlights, to_file=True)
 
     def setup_context_menu(self):
         context_menu = QtWidgets.QMenu()
@@ -77,6 +109,20 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         for thread in self.threads:
             if thread is not None:
                 thread.exit()
+
+        for thread in self.thread_pool:
+            thread.exit()
+
+    def handle_buttons(self, service, highlight_name):
+        highlight = DataStore.get_highlight(highlight_name)
+        url = highlight[service]
+
+        if url is None:
+            self.window.status.showMessage(
+                f'Added {highlight_name} to upload queue')
+            self.queue.put((highlight_name, service))
+        else:
+            webbrowser.open(url, new=2)
 
     def handle_api_events(self, message):
         uri = message[2]['uri']
