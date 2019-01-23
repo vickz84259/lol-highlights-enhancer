@@ -148,11 +148,17 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
     def handle_new_highlights(self, highlights):
         DataStore.refresh_highlights()
+        upload_preferences = DataStore.get_preference('upload_new_highlights')
 
         new_highlights = {}
         for highlight_name in highlights:
             new_highlights[highlight_name] = DataStore.get_highlight(
                 highlight_name)
+            if upload_preferences['gfycat']:
+                self.queue.put((highlight_name, 'gfycat'))
+
+            if upload_preferences['streamable']:
+                self.queue.put((highlight_name, 'streamable'))
 
         processor_thread = process_highlights.Thread(new_highlights)
         processor_thread.start()

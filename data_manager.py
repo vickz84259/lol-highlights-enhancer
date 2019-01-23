@@ -307,3 +307,22 @@ class DataStore():
             base_highlights[highlight_name] = data
 
         cls.save_highlights(base_highlights, to_file)
+
+    @classmethod
+    def get_preference(cls, name):
+        return cls.get_preferences().get(name)
+
+    @classmethod
+    def save_preference(cls, preference_name, data):
+        preference_dict = {}
+        preference_dict[preference_name] = data
+
+        cls.save_partial_preferences(preference_dict, to_file=True)
+
+    @classmethod
+    def save_partial_preferences(cls, preferences, to_file=False):
+        base_preferences = cls.get_preferences()
+        for preference, data in preferences.items():
+            base_preferences[preference] = data
+
+        cls.save_preferences(base_preferences, to_file)

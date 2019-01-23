@@ -14,7 +14,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('Lol-Highlights-Enhancer')
 
         self.menu = self.menuBar()
-        self.file_menu = self.menu.addMenu('file')
+        self.settings_menu = self.menu.addMenu('Settings')
+        self.init_settings()
 
         self.status = self.statusBar()
 
@@ -24,6 +25,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMinimumSize(geometry.width() * 0.4, geometry.height() * 0.5)
 
         self.selected = None
+
+    def init_settings(self):
+        preferences = DataStore.get_preferences()
+
+        gfycat_action = QtWidgets.QAction('Gfycat', self, checkable=True)
+        gfycat_action.setChecked(
+            preferences['upload_new_highlights']['gfycat'])
+        gfycat_action.triggered.connect(self.gfyat_setting_changed)
+
+        streamable_action = QtWidgets.QAction(
+            'Streamable', self, checkable=True)
+        streamable_action.setChecked(
+            preferences['upload_new_highlights']['streamable'])
+        streamable_action.triggered.connect(self.streamable_setting_changed)
+
+        upload_menu = QtWidgets.QMenu('Upload new highlights', self)
+        upload_menu.addAction(gfycat_action)
+        upload_menu.addAction(streamable_action)
+
+        self.settings_menu.addMenu(upload_menu)
 
     def init_UI(self):
         hbox = QtWidgets.QHBoxLayout()
@@ -52,6 +73,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.widgets[name] = name_label
 
         return layout
+
+    def gfyat_setting_changed(self, state):
+        preference = DataStore.get_preference('upload_new_highlights')
+        preference['gfycat'] = state
+
+        DataStore.save_preference('upload_new_highlights', preference)
+
+    def streamable_setting_changed(self, state):
+        preference = DataStore.get_preference('upload_new_highlights')
+        preference['streamable'] = state
+
+        DataStore.save_preference('upload_new_highlights', preference)
 
     def gfycat_clicked(self):
         self.action.emit('gfycat', self.selected)
