@@ -1,37 +1,9 @@
 import requests
-from ruamel.yaml import YAML
 
+from data_manager import DataStore
 import utils
 
 BASE_URL = 'https://api.gfycat.com/v1'
-
-
-def get_token():
-    """Function to get api token
-
-    The api token is required to authenticate api calls made to gfycat
-
-    returns:
-        String representing the api token received.
-    """
-    with open('config.yaml') as config_file:
-        yaml = YAML(typ='safe')
-        config = yaml.load(config_file)
-
-    client_id = config['gfycat']['client_id']
-    client_secret = config['gfycat']['client_secret']
-
-    body = {
-        'grant_type': 'client_credentials',
-        'client_id': client_id,
-        'client_secret': client_secret
-    }
-
-    response = requests.post(f'{BASE_URL}/oauth/token', json=body)
-    token = response.json()['access_token']
-
-    print(token)
-    return token
 
 
 def upload(file_path):
@@ -48,7 +20,8 @@ def upload(file_path):
         'title': filename,
         'tags': ['leagueoflegends', 'League of Legends']
     }
-    auth_header = {'Authorization': f'Bearer {get_token()}'}
+    token = DataStore.get_gfycat_token()
+    auth_header = {'Authorization': f'Bearer {token}'}
 
     url = f'{BASE_URL}/gfycats'
     response = requests.post(url, json=body, headers=auth_header)
@@ -58,7 +31,6 @@ def upload(file_path):
 
     with open(file_path, 'rb') as video:
         response = requests.put(upload_url, video)
-        print(response)
 
     video_url = f'https://gfycat.com/{gfyname}'
     return video_url

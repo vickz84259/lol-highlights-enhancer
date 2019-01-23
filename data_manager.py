@@ -1,4 +1,5 @@
 import base64
+import time
 
 from ruamel.yaml import YAML
 from Crypto.Cipher import AES
@@ -72,6 +73,46 @@ class DataStore():
     @classmethod
     def save_champions(cls, data, to_file=False):
         cls.__save(data, 'champions', to_file)
+
+    @classmethod
+    def __get_latest_token(cls):
+        client_id, client_secret = cls.get_gfycat_secrets()
+        body = {
+            'grant_type': 'client_credentials',
+            'client_id': client_id,
+            'client_secret': client_secret
+        }
+
+        base_url = 'https://api.gfycat.com/v1'
+        url = f'{base_url}/oauth/token'
+        response = requests.post(url, json=body)
+
+        return response.json()
+
+    @classmethod
+    def __is_expired(cls, expiry):
+        result = False
+
+        current_time = time.time()
+        if current_time >= float(expiry):
+            result = True
+
+        return result
+
+    @classmethod
+    def get_gfycat_token(cls):
+        token = keyring.get_password(PLATFORM, 'gfycat_token')
+        expiry = keyring.get_password(PLATFORM, 'expiry')
+
+        if token is None or cls.__is_expired(expiry):
+            token_details = cls.__get_latest_token()
+            token = token_details['access_token']
+            expiry = time.time() + token_details['expires_in']
+
+            keyring.set_password(PLATFORM, 'gfycat_token', token)
+            keyring.set_password(PLATFORM, 'expiry', expiry)
+
+        return token
 
     @classmethod
     def get_gfycat_secrets(cls):
