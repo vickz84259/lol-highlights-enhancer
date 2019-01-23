@@ -55,11 +55,21 @@ class MainWindow(QtWidgets.QMainWindow):
     def streamable_clicked(self):
         self.action.emit('streamable', self.selected)
 
-    def __setup_sites_layout(self, name):
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(QtWidgets.QLabel(f'{name.capitalize()}:'))
+    def gfycat_alternate_clicked(self):
+        self.action.emit('gfycat_alternate', self.selected)
 
-        button = QtWidgets.QPushButton('Upload')
+    def __setup_sites_layout(self, name, string=None):
+        layout = QtWidgets.QHBoxLayout()
+
+        if string is None:
+            string = name.capitalize()
+        layout.addWidget(QtWidgets.QLabel(f'{string}:'))
+
+        if name != 'gfycat_alternate':
+            button = QtWidgets.QPushButton('Upload')
+        else:
+            button = QtWidgets.QPushButton('View')
+
         button.clicked.connect(getattr(self, f'{name}_clicked'))
         button.setDisabled(True)
         layout.addWidget(button, 1)
@@ -84,17 +94,25 @@ class MainWindow(QtWidgets.QMainWindow):
         main_layout.addLayout(self.__setup_label_layout('size'))
 
         main_layout.addLayout(self.__setup_sites_layout('gfycat'))
+        main_layout.addLayout(
+            self.__setup_sites_layout(
+                'gfycat_alternate', 'Alternate gfycat link'))
         main_layout.addLayout(self.__setup_sites_layout('streamable'))
 
         return main_layout
 
     def set_button(self, name, link):
-        if link is None:
-            self.widgets[name].setText('Upload')
-        else:
-            self.widgets[name].setText('View')
+        if name != 'gfycat_alternate':
+            if link is None:
+                self.widgets[name].setText('Upload')
+            else:
+                self.widgets[name].setText('View')
 
-        self.widgets[name].setDisabled(False)
+            self.widgets[name].setDisabled(False)
+        else:
+            gfycat_text = self.widgets['gfycat'].text()
+            if gfycat_text != 'Upload':
+                self.widgets[name].setDisabled(False)
 
     def item_clicked(self, item):
         highlight_name = item.text()
@@ -123,6 +141,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.set_button('gfycat', highlight_details['gfycat'])
         self.set_button('streamable', highlight_details['streamable'])
+        self.set_button('gfycat_alternate', '')
 
     def closeEvent(self, event):
         self.closing_event.emit()

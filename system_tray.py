@@ -7,6 +7,7 @@ import process_highlights
 import queue
 import setup_thread
 import upload_thread
+import utils
 import webbrowser
 import window
 import ws
@@ -115,14 +116,20 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
     def handle_buttons(self, service, highlight_name):
         highlight = DataStore.get_highlight(highlight_name)
-        url = highlight[service]
 
-        if url is None:
-            self.window.status.showMessage(
-                f'Added {highlight_name} to upload queue')
-            self.queue.put((highlight_name, service))
+        if service != 'gfycat_alternate':
+            url = highlight[service]
+            if url is None:
+                self.window.status.showMessage(
+                    f'Added {highlight_name} to upload queue')
+                self.queue.put((highlight_name, service))
+            else:
+                webbrowser.open(url, new=2)
         else:
-            webbrowser.open(url, new=2)
+            url = highlight['gfycat']
+            gfyname = utils.get_filename(url)
+
+            webbrowser.open(f'https://giant.gfycat.com/{gfyname}.mp4', new=2)
 
     def handle_api_events(self, message):
         uri = message[2]['uri']
