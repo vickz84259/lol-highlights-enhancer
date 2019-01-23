@@ -18,7 +18,8 @@ def upload(file_path):
     filename = utils.get_filename(file_path)
     body = {
         'title': filename,
-        'tags': ['leagueoflegends', 'League of Legends']
+        'tags': ['leagueoflegends', 'League of Legends'],
+        'noMd5': True
     }
     token = DataStore.get_gfycat_token()
     auth_header = {'Authorization': f'Bearer {token}'}

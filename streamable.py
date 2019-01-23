@@ -19,9 +19,8 @@ def upload(file_path):
 
         auth = DataStore.get_streamable_secrets()
         headers = {
-            'user-agent': 'lol-highlights-enhancer/1.0.0 '
-            '(victor@slick.co.ke)',
-            'Authorizaion': f'Basic {auth}'}
+            'user-agent': 'lol-highlights-enhancer/1.0.0 (victor@slick.co.ke)',
+            'Authorization': f'Basic {auth}'}
 
         api_url = 'https://api.streamable.com/upload'
         response = requests.post(
