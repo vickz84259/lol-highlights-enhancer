@@ -43,6 +43,7 @@ class WebSocketThread(QtCore.QThread):
     def run(self):
         token, port = DataStore.get_connection_details()
 
+        time.sleep(5)
         self.ws = websocket.WebSocketApp(
             f"wss://127.0.0.1:{port}/",
             header={'Authorization': network.get_auth_header(token)},
@@ -51,7 +52,6 @@ class WebSocketThread(QtCore.QThread):
             on_error=self.on_error,
             on_close=self.on_close)
 
-        time.sleep(5)
         self.ws.run_forever(
             sslopt={'cert_reqs': ssl.CERT_NONE}, suppress_origin=True)
 
