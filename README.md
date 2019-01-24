@@ -20,7 +20,15 @@ The application currently only supports Windows. There is a [portable zip](https
 1. Unzip the file.
 2. Run LHE.exe
 
-You can start the application first or the League of Legends Client, the order doesn't matter.
+You can start the application first or the League of Legends Client, the order doesn't matter.'
+
+When starting the application for the first time, the application will try and retrieve match details for each highlight and will
+notify you once it's done via the status bar at the bottom. You can still click and upload any highlight you want as it processes
+the match details.
+
+To have it automatically upload highlights automatically, enable the setting as indicated in the screenshots below. Then open a 
+replay while the application is running in the background (or minimised to the taskbar). Once you are done watching the replay,
+any highlights created will be uploaded as per your settings.
 
 ## Running from Source
 The application runs on Python 3.6 or higher
