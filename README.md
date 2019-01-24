@@ -52,10 +52,13 @@ pyinstaller lhe.spec
 The resultant executable will be contained in `dist/LHE`
 
 ## Notes
-The reason there are two buttons related to Gfycat is because for some reason, when I upload to gfycat, some times the link to the video
+If you encounter any issues of the client being unresponsive or generally not working as intended. Do consider running the
+application from source as indicated in the section above.
+
+The reason there are two buttons related to Gfycat is because for some reason, when you upload to gfycat, some times the link to the video
 takes like 5 minutes before the video popups. It throws up 404 errors during that period. Like in this pic
 ![Desktop Screenshot](https://i.imgur.com/nzUhAlE.png)
-So the other link acts as a "Your video has been uploaded but gfycat aren't playing nice" button and shows you an alternative 
+So the other link acts as a _"Your video has been uploaded but gfycat aren't playing nice"_ button and shows you an alternative 
 link to your gfycat upload. I am yet to understand how the alternate links work fine but the main link takes that long to show up.
 
 ## Screenshots
@@ -107,6 +110,13 @@ only when I was going through server logs and not seeing requests reaching the s
 Seeing the analytics from during the development of this application, I can rest easy at night.
 ![Cloudflare analytics](https://i.imgur.com/k9MxY89.png)
 
+A challenge I also faced was how to protect the api secrets. The RIOT api key was already secure on the server as indicated above,
+but for the secrets  required to upload the videod to their respective platforms I had to come up with something.
+I ended up having that the server retrieves the summoner details, use the summoner's PUUID to encrypt the secrets. The client
+stores the encrypted secrets in the Windows Vault.
+The secrets are only decrypted when they are to be used. I am still looking for ways to enhance this further and ensure they are
+more secure.
+
 The last major challenge has been dealing with different threads and trying to make sure the main GUI thread remained responsive.
 As I stated earlier this was my first time making a serious GUI application, so communicating between different threads and 
 coordinating what should run when or after what, was the source of many bugs. I wanted to make sure I had a running application 
@@ -120,7 +130,7 @@ with Chrome on who would use the most RAM. It was using well over 1.5 GB due to 
 thread was spawning, new shell processes every few seconds. XD
 
 At the end of it all, I had fun and it was a great learning experience. I wasn't able to fully
-implement every feature that I could have wanted but I'll definitely implement them down the road as this is a tool I've 
+implement every feature that I could have wanted but I'll definitely implement them down the road as this is a tool I've always
 personally wanted.
 
 ## Future Considerations
