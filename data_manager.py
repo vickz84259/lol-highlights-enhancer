@@ -7,6 +7,7 @@ from Crypto.Hash import SHA256
 from Crypto.Util import Padding
 
 import keyring
+import keyring.backends.Windows
 import requests
 
 import league
@@ -18,6 +19,8 @@ HIGHLIGHTS_PATH = 'highlights.yaml'
 CHAMPIONS_PATH = 'resources\\champions.json'
 
 PLATFORM = 'lol-highlights-enhancer'
+
+keyring.set_keyring(keyring.backends.Windows.WinVaultKeyring())
 
 
 class DataStore():
