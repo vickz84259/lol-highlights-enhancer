@@ -1,4 +1,5 @@
 import base64
+import time
 
 from ruamel.yaml import YAML
 from Crypto.Cipher import AES
@@ -6,6 +7,7 @@ from Crypto.Hash import SHA256
 from Crypto.Util import Padding
 
 import keyring
+import keyring.backends.Windows
 import requests
 
 import league
@@ -14,8 +16,11 @@ import utils
 
 PREFERENCES_PATH = 'resources\\user_preferences.yaml'
 HIGHLIGHTS_PATH = 'highlights.yaml'
+CHAMPIONS_PATH = 'resources\\champions.json'
 
 PLATFORM = 'lol-highlights-enhancer'
+
+keyring.set_keyring(keyring.backends.Windows.WinVaultKeyring())
 
 
 class DataStore():
@@ -23,7 +28,8 @@ class DataStore():
 
     __internal_data = {
         'preferences': {'file_name': PREFERENCES_PATH, 'data': None},
-        'highlights': {'file_name': HIGHLIGHTS_PATH, 'data': None}}
+        'highlights': {'file_name': HIGHLIGHTS_PATH, 'data': None},
+        'champions': {'file_name': CHAMPIONS_PATH, 'data': None}}
 
     @classmethod
     def __save(cls, data, type, to_file=False):
@@ -56,12 +62,60 @@ class DataStore():
         return cls.__get('highlights')
 
     @classmethod
+    def get_champions(cls):
+        return cls.__get('champions')
+
+    @classmethod
     def save_preferences(cls, data, to_file=False):
         cls.__save(data, 'preferences', to_file)
 
     @classmethod
     def save_highlights(cls, data, to_file=False):
         cls.__save(data, 'highlights', to_file)
+
+    @classmethod
+    def save_champions(cls, data, to_file=False):
+        cls.__save(data, 'champions', to_file)
+
+    @classmethod
+    def __get_latest_token(cls):
+        client_id, client_secret = cls.get_gfycat_secrets()
+        body = {
+            'grant_type': 'client_credentials',
+            'client_id': client_id,
+            'client_secret': client_secret
+        }
+
+        base_url = 'https://api.gfycat.com/v1'
+        url = f'{base_url}/oauth/token'
+        response = requests.post(url, json=body)
+
+        return response.json()
+
+    @classmethod
+    def __is_expired(cls, expiry):
+        result = False
+
+        current_time = time.time()
+        if current_time >= float(expiry):
+            result = True
+
+        return result
+
+    @classmethod
+    def get_gfycat_token(cls):
+        token = keyring.get_password(PLATFORM, 'gfycat_token')
+        expiry = keyring.get_password(PLATFORM, 'expiry')
+
+        if token is None or cls.__is_expired(expiry):
+            token_details = cls.__get_latest_token()
+            token = token_details['access_token']
+            expiry = time.time() + token_details['expires_in']
+
+            keyring.set_password(PLATFORM, 'gfycat_token', token)
+            keyring.set_password(PLATFORM, 'expiry', expiry)
+
+        return token
 
     @classmethod
     def get_gfycat_secrets(cls):
@@ -82,6 +136,7 @@ class DataStore():
     def setup(cls):
         cls.setup_preferences()
         cls.setup_highlights()
+        cls.setup_champions()
 
         cls.setup_client_secrets()
 
@@ -125,24 +180,82 @@ class DataStore():
         region = 'na1' if region == 'NA' else region.lower()
         preferences['region'] = region
 
+        normalised_region = network.get(
+            '/lol-platform-config/v1/namespaces/LoginDataPacket/'
+            'competitiveRegion')
+        preferences['normalised_region'] = normalised_region.lower()
+
         cls.save_preferences(preferences, to_file=True)
 
     @classmethod
     def setup_highlights(cls):
         highlights = network.post('/lol-highlights/v1/highlights')
 
+        highlights_dict = {}
         for highlight in highlights:
             name = highlight['name']
             result = utils.get_match_details(name)
 
             if result is not None:
-                highlight['region'] = result['region']
+                highlight['region'] = result['region'].lower()
                 highlight['match_id'] = result['match_id']
+
+                patch_major = result['patch_major']
+                patch_minor = result['patch_minor']
+                highlight['patch_version'] = f'{patch_major}.{patch_minor}'
             else:
                 highlight['region'] = None
                 highlight['match_id'] = None
+                highlight['patch_version'] = None
 
-        cls.save_highlights(highlights, to_file=True)
+            highlight['gfycat'] = None
+            highlight['streamable'] = None
+
+            highlights_dict[name] = highlight
+
+        cls.save_highlights(highlights_dict, to_file=True)
+
+    @classmethod
+    def refresh_highlights(cls):
+        highlights = network.post('/lol-highlights/v1/highlights')
+
+        old_highlights = cls.get_highlights()
+        for highlight in highlights:
+
+            name = highlight['name']
+            if name not in old_highlights:
+                result = utils.get_match_details(name)
+                if result is not None:
+                    highlight['region'] = result['region'].lower()
+                    highlight['match_id'] = result['match_id']
+
+                    patch_major = result['patch_major']
+                    patch_minor = result['patch_minor']
+                    highlight['patch_version'] = f'{patch_major}.{patch_minor}'
+                else:
+                    highlight['region'] = None
+                    highlight['match_id'] = None
+                    highlight['patch_version'] = None
+
+                highlight['gfycat'] = None
+                highlight['streamable'] = None
+
+                old_highlights[name] = highlight
+
+        cls.save_highlights(old_highlights, to_file=True)
+
+    @classmethod
+    def setup_champions(cls):
+        preferences = cls.get_preferences()
+        region = preferences['normalised_region']
+        url = f'https://ddragon.leagueoflegends.com/realms/{region}.json'
+
+        latest_version = requests.get(url).json()['n']['champion']
+        base_url = 'https://ddragon.leagueoflegends.com/cdn/'
+        url = f'{base_url}{latest_version}/data/en_US/champion.json'
+        champions = requests.get(url).json()
+
+        cls.save_champions(champions, to_file=True)
 
     @classmethod
     def get_connection_details(cls):
@@ -166,3 +279,53 @@ class DataStore():
 
         data = Padding.unpad(padded_data, block_size).decode()
         return data
+
+    @classmethod
+    def get_highlight_names(cls):
+        return list(cls.get_highlights().keys())
+
+    @classmethod
+    def get_highlight(cls, name):
+        return cls.get_highlights().get(name)
+
+    @classmethod
+    def save_highlight(cls, highlight_name, data):
+        highlight_dict = {}
+        highlight_dict[highlight_name] = data
+
+        cls.save_partial_highlights(highlight_dict, to_file=True)
+
+    @classmethod
+    def get_champion_by_id(cls, id):
+        champions = cls.get_champions()
+
+        for champion, champion_data in champions['data'].items():
+            if int(champion_data['key']) == id:
+                return champion_data['name']
+
+    @classmethod
+    def save_partial_highlights(cls, highlights, to_file=False):
+        base_highlights = cls.get_highlights()
+        for highlight_name, data in highlights.items():
+            base_highlights[highlight_name] = data
+
+        cls.save_highlights(base_highlights, to_file)
+
+    @classmethod
+    def get_preference(cls, name):
+        return cls.get_preferences().get(name)
+
+    @classmethod
+    def save_preference(cls, preference_name, data):
+        preference_dict = {}
+        preference_dict[preference_name] = data
+
+        cls.save_partial_preferences(preference_dict, to_file=True)
+
+    @classmethod
+    def save_partial_preferences(cls, preferences, to_file=False):
+        base_preferences = cls.get_preferences()
+        for preference, data in preferences.items():
+            base_preferences[preference] = data
+
+        cls.save_preferences(base_preferences, to_file)

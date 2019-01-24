@@ -1,5 +1,6 @@
 import json
 import ssl
+import time
 
 import websocket
 import PySide2.QtCore as QtCore
@@ -50,6 +51,7 @@ class WebSocketThread(QtCore.QThread):
             on_error=self.on_error,
             on_close=self.on_close)
 
+        time.sleep(5)
         self.ws.run_forever(
             sslopt={'cert_reqs': ssl.CERT_NONE}, suppress_origin=True)
 

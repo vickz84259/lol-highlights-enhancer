@@ -1,15 +1,14 @@
 import requests
 
+from data_manager import DataStore
 import utils
 
 
-def upload(file_path, username, password):
+def upload(file_path):
     """Upload a file to Streamable.com
 
     Args:
         file_path (string): Path to the video to be uploaded.
-        username (string): Streamable username
-        password (string): Password to Streamable account
 
     Returns:
         A string that represents the url to the uploaded video
@@ -18,16 +17,16 @@ def upload(file_path, username, password):
         filename = utils.get_filename(file_path)
         content = {'file': (filename, file)}
 
-        user_agent = {
-            'user-agent': 'lol-highlights-enhancer/1.0.0 '
-            '(victor@slick.co.ke)'}
+        auth = DataStore.get_streamable_secrets()
+        headers = {
+            'user-agent': 'lol-highlights-enhancer/1.0.0 (victor@slick.co.ke)',
+            'Authorization': f'Basic {auth}'}
 
         api_url = 'https://api.streamable.com/upload'
         response = requests.post(
             api_url,
             files=content,
-            auth=(username, password),
-            headers=user_agent)
+            headers=headers)
 
     shortcode = response.json()['shortcode']
     video_url = f'https://streamable.com/{shortcode}'
