@@ -51,6 +51,20 @@ So the other link acts as a "Your video has been uploaded but gfycat aren't play
 link to your gfycat upload. I am yet to understand how the alternate links work fine but the main link takes that long to show up.
 
 ## Screenshots
+On first run the application will retrieve the match details from the highlights. Match details will not be provided for highlights
+that have been renamed.
+![Image 1](https://i.imgur.com/tDbm5p1.png)
+
+When it's done retrieving the highlights.
+![Image 2](https://i.imgur.com/WLkFaVv.png)
+
+By default the application does not upload highlights automatically after they've been created. This setting controls that.
+![Image 3](https://i.imgur.com/K0ODThY.png)
+
+You can select one of the two or both of them.
+![Image 4](https://i.imgur.com/I6STgFN.png)
+
+![Image 5](https://i.imgur.com/Fatl9LJ.png)
 
 ## Dev Journey
 This being my first GUI application to make, it was a bit of a challenge getting some concepts down. I'm mainly a backend dev so
@@ -105,3 +119,4 @@ personally wanted.
 1. Adding the ability to search/filter out highlights.
 2. Uploading to more video platform sites and also social platforms.
 3. Extract more context of what's going on from the video itself.
+4. Multi selection and upload of highlights
