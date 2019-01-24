@@ -26,7 +26,7 @@ When starting the application for the first time, the application will try and r
 notify you once it's done via the status bar at the bottom. You can still click and upload any highlight you want as it processes
 the match details.
 
-To have it automatically upload highlights automatically, enable the setting as indicated in the screenshots below. Then open a 
+To have it automatically upload highlights, enable the setting as indicated in the screenshots below. Then open a 
 replay while the application is running in the background (or minimised to the taskbar). Once you are done watching the replay,
 any highlights created will be uploaded as per your settings.
 
