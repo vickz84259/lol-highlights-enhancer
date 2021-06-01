@@ -31,7 +31,7 @@ ruamel.yaml==0.15.85
 s3transfer==0.1.13
 shiboken2==5.12.0
 six==1.12.0
-urllib3==1.24.1
+urllib3==1.26.5
 virtualenv==16.2.0
 virtualenvwrapper-win==1.2.5
 watchdog==0.9.0
